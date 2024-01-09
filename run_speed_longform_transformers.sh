@@ -37,13 +37,13 @@ names=("openai/whisper-large-v2")
 
 for name in "${names[@]}"; do
   python ./run_whisper_transformers.py \
-    --dataset_name "distil-whisper/earnings21" \
-    --dataset_config_name "full" \
-    --dataset_split_name "test" \
-    --text_column_name "transcription" \
-    --wandb_name "RTX4090-${name}-cond-true-fp32" \
+    --dataset_name "distil-whisper/meanwhile+distil-whisper/earnings21+distil-whisper/earnings22+distil-whisper/rev16" \
+    --dataset_config_name "default+full+full+whisper_subset" \
+    --dataset_split_name "test+test+test+test" \
+    --text_column_name "text+transcription+transcription+transcription" \
+    --wandb_name "RTX4090-${name}-cond-false" \
     --model_name_or_path ${name} \
     --wandb_project "whisper-long-form-transformers" \
-    --condition_on_prev_tokens "True" \
-    --use_fp16 "False"
+    --condition_on_prev_tokens "False" \
+    --use_fp16 "True"
 done
