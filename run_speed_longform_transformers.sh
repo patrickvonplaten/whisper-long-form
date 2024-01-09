@@ -36,7 +36,7 @@ names=("openai/whisper-large-v2")
 # --use_orig_whisper \
 
 for name in "${names[@]}"; do
-  python ./run_whisper_orig.py \
+  python ./run_whisper_transformers.py \
     --dataset_name "distil-whisper/earnings21" \
     --dataset_config_name "full" \
     --dataset_split_name "test" \
