@@ -47,7 +47,6 @@ class DataTrainingArguments:
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
-
     dataset_name: str = field(
         default=None,
         metadata={
@@ -118,10 +117,6 @@ class DataTrainingArguments:
     streaming: bool = field(
         default=True,
         metadata={"help": "Whether to use Datasets' streaming mode to load and the data."},
-    )
-    max_eval_samples: Optional[int] = field(
-        default=None,
-        metadata={"help": "For debugging purposes, truncate the number of eval examples to this value if set."},
     )
 
 
@@ -209,8 +204,6 @@ def convert_dataset_str_to_list(
             }
         )
     return dataset_names_dict
-
-
 
 
 def main():
@@ -331,7 +324,7 @@ def main():
         raw_audio = raw_audio.astype(np.float32)
 
         # generate
-        out_dict = model.transcribe(raw_audio, language="en")
+        out_dict = model.transcribe(raw_audio, condition_on_previous_text=data_args.condition_on_prev_tokens, language="en")
 
         batch["transcription"] = [out_dict["text"]]
         batch["reference"] = batch["text"]
@@ -359,6 +352,7 @@ def main():
     for split in result_datasets:
         transcriptions = []
         references = []
+        all_wers = []
 
         if data_args.streaming:
             result_iter = iter(result_datasets[split])
@@ -366,11 +360,18 @@ def main():
         for result in result_iter:
             transcriptions.append(result["transcription"])
             references.append(result["reference"])
+            try:
+                all_wers.append(compute_metrics(transcriptions[-1:], references[-1:], normalizer))
+            except:
+                all_wers.append(None)
 
             count += 1
             print(f"Processed {count} samples...")
 
-        log_stats = {f"{split}_wer": compute_metrics(transcriptions, references, normalizer)}
+        log_stats = {
+            f"{split}_wer": compute_metrics(transcriptions, references, normalizer),
+            f"{split}_all_wer": all_wers,
+        }
         wandb_logger.log(log_stats)
 
     print("Done!")
